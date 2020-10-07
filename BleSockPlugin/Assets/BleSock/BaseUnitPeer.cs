@@ -7,13 +7,14 @@ using UnityEngine;
 
 namespace BleSock
 {
-    public class GuestPeer : PeerBase
+    public class BaseUnitPeer : PeerBase
     {
         // Events
 
         public event Action<string, int> onDiscover;
         public event Action onConnect;
         public event Action onDisconnect;
+        public int session = 0;
 
         // Properties
 

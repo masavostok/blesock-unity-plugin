@@ -66,7 +66,7 @@ public class SpeedTest : MonoBehaviour
 
             backButton.interactable = true;
 
-            var host = new BleSock.HostPeer();
+            var host = new BleSock.RemoconPeer();
             host.MaximumPlayers = 2;
 
             host.onReady += () =>
@@ -143,7 +143,7 @@ public class SpeedTest : MonoBehaviour
 
             backButton.interactable = true;
 
-            var guest = new BleSock.GuestPeer();
+            var guest = new BleSock.BaseUnitPeer();
 
             guest.onBluetoothRequire += () =>
             {
@@ -234,7 +234,7 @@ public class SpeedTest : MonoBehaviour
             var optionData = (ValueOptionData)devicesDropdown.options[devicesDropdown.value];
             try
             {
-                ((BleSock.GuestPeer)mPeer).Connect(optionData.value);
+                ((BleSock.BaseUnitPeer)mPeer).Connect(optionData.value);
             }
             catch (Exception e)
             {

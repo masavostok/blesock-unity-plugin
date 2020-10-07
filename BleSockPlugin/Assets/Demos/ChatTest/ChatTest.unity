@@ -562,12 +562,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modeSelectObject: {fileID: 1222047212}
   playerNameInputField: {fileID: 1395781271}
-  hostButton: {fileID: 895924365}
-  guestButton: {fileID: 414988341}
-  hostObject: {fileID: 822126310}
+  peripheralButton: {fileID: 895924365}
+  centralButton: {fileID: 414988341}
+  peripheralObject: {fileID: 822126310}
   advertiseButton: {fileID: 154971288}
   stopButton: {fileID: 484533514}
-  guestObject: {fileID: 2044925372}
+  centralObject: {fileID: 2044925372}
   devicesDropdown: {fileID: 905909332}
   connectButton: {fileID: 1072327955}
   disconnectButton: {fileID: 1427255359}
@@ -814,7 +814,7 @@ GameObject:
   - component: {fileID: 414988342}
   - component: {fileID: 414988341}
   m_Layer: 5
-  m_Name: GuestButton
+  m_Name: CentraltButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1404,7 +1404,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u5F85\u53D7\u3051\u3092\u505C\u6B62"
+  m_Text: "\u30EA\u30E2\u30B3\u30F3\u505C\u6B62"
 --- !u!222 &518754752
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1565,7 +1565,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u30EA\u30E2\u30B3\u30F3\u63A5\u7D9A\u3059\u308B"
+  m_Text: "\u30EA\u30E2\u30B3\u30F3\u3092\u63A2\u3059"
 --- !u!222 &558828871
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1643,7 +1643,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Remocon\u958B\u59CB"
+  m_Text: Central
 --- !u!222 &641429200
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1934,7 +1934,7 @@ GameObject:
   - component: {fileID: 822126311}
   - component: {fileID: 822126312}
   m_Layer: 5
-  m_Name: Host
+  m_Name: PeripheralRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2000,7 +2000,7 @@ GameObject:
   - component: {fileID: 895924366}
   - component: {fileID: 895924365}
   m_Layer: 5
-  m_Name: HostButton
+  m_Name: PeripheralButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2383,7 +2383,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u30DB\u30B9\u30C8\u958B\u59CB"
+  m_Text: Peripheral
 --- !u!222 &930488241
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3436,7 +3436,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u30EA\u30E2\u30B3\u30F3\u5F85\u53D7\u3051"
+  m_Text: "\u30EA\u30E2\u30B3\u30F3\u958B\u59CB"
 --- !u!222 &1445673583
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3936,7 +3936,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u5207\u65AD\u3059\u308B"
+  m_Text: "\u30EA\u30E2\u30B3\u30F3\u3092\u5207\u65AD\u3059\u308B"
 --- !u!222 &1743528138
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4476,7 +4476,7 @@ GameObject:
   - component: {fileID: 2044925373}
   - component: {fileID: 2044925374}
   m_Layer: 5
-  m_Name: Guest
+  m_Name: CentralRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

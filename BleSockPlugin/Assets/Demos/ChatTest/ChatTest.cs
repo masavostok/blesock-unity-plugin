@@ -8,14 +8,14 @@ public class ChatTest : MonoBehaviour
 {
     public GameObject modeSelectObject;
     public InputField playerNameInputField;
-    public Button hostButton;
-    public Button guestButton;
+    public Button peripheralButton;
+    public Button centralButton;
 
-    public GameObject hostObject;
+    public GameObject peripheralObject;
     public Button advertiseButton;
     public Button stopButton;
 
-    public GameObject guestObject;
+    public GameObject centralObject;
     public Dropdown devicesDropdown;
     public Button connectButton;
     public Button disconnectButton;
@@ -30,7 +30,7 @@ public class ChatTest : MonoBehaviour
     [SerializeField] private Text userName;
     [SerializeField] private Text fatalError;
 
-    private const string PROTOCOL_IDENTIFIER = "BleChatTest";
+    private const string PROTOCOL_IDENTIFIER = "BleRemoconComm";
 
 
     private class DeviceOptionData : Dropdown.OptionData
@@ -45,7 +45,10 @@ public class ChatTest : MonoBehaviour
     }
 
 
-    private BleSock.PeerBase mPeer;
+    //private BleSock.PeerBase mPeer;
+    private BleSock.RemoconPeer peerRemocon;
+    private BleSock.BaseUnitPeer peerBaseUnit;
+    private int session = 0;
     private List<string> mLogs = new List<string>();
 
     private void OnEnable()
@@ -61,17 +64,18 @@ public class ChatTest : MonoBehaviour
         playerNameInputField.onEndEdit.AddListener((name) =>
         {
             bool interactable = !string.IsNullOrEmpty(name);
-            hostButton.interactable = interactable;
-            guestButton.interactable = interactable;
+            peripheralButton.interactable = interactable;
+            centralButton.interactable = interactable;
         });
 
-        // Host
+        // Peripheral
+        // リモコン側、開始通知（アドバタイズ）、接続受け入れ、リモコンコマンド
 
-        hostObject.SetActive(false);
+        peripheralObject.SetActive(false);
 
         //hostButton.interactable = false;
-        hostButton.GetComponent<Selectable>().Select();
-        hostButton.onClick.AddListener(() =>
+        peripheralButton.GetComponent<Selectable>().Select();
+        peripheralButton.onClick.AddListener(() =>
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (!BleSock.AndroidUtils.IsPeripheralAvailable)
@@ -82,18 +86,17 @@ public class ChatTest : MonoBehaviour
             }
 #endif
             modeSelectObject.SetActive(false);
-            hostObject.SetActive(true);
+            peripheralObject.SetActive(true);
             chatObject.SetActive(true);
 
             advertiseButton.interactable = false;
             stopButton.interactable = false;
 
-
             backButton.interactable = true;
 
-            var host = new BleSock.HostPeer();
-
-            host.onReady += () =>
+            var remocon = new BleSock.RemoconPeer();
+            
+            remocon.onReady += () =>
             {
                 Log("初期化が完了しました");
                 advertiseButton.interactable = true;
@@ -102,34 +105,34 @@ public class ChatTest : MonoBehaviour
                 stopButton.GetComponent<Selectable>().Select();
             };
 
-            host.onBluetoothRequire += () =>
+            remocon.onBluetoothRequire += () =>
             {
                 Log("Bluetoothを有効にしてください");
             };
 
-            host.onFail += () =>
+            remocon.onFail += () =>
             {
                 Log("失敗しました");
             };
 
-            host.onPlayerJoin += (player) =>
+            remocon.onPlayerJoin += (player) =>
             {
                 Log("{0} が参加しました", player.PlayerName);
             };
 
-            host.onPlayerLeave += (player) =>
+            remocon.onPlayerLeave += (player) =>
             {
                 Log("{0} が離脱しました", player.PlayerName);
             };
 
-            host.onReceive += (message, messageSize, sender) =>
+            remocon.onReceive += (message, messageSize, sender) =>
             {
                 Log("{0}: {1}", sender.PlayerName, Encoding.UTF8.GetString(message, 0, messageSize));
             };
 
             try
             {
-                host.Initialize(PROTOCOL_IDENTIFIER, playerNameInputField.text);
+                remocon.Initialize(PROTOCOL_IDENTIFIER, playerNameInputField.text);
             }
             catch (Exception e)
             {
@@ -139,14 +142,14 @@ public class ChatTest : MonoBehaviour
             }
 
             Log("初期化しています..");
-            mPeer = host;
+            peerRemocon = remocon;
         });
 
         advertiseButton.onClick.AddListener(() =>
-        {
+        {            
             try
             {
-                ((BleSock.HostPeer)mPeer).StartAdvertising(playerNameInputField.text);
+                ((BleSock.RemoconPeer)peerRemocon).StartAdvertising(playerNameInputField.text);
             }
             catch (Exception e)
             {
@@ -155,7 +158,7 @@ public class ChatTest : MonoBehaviour
                 return;
             }
 
-            Log("リモコンの接続を待っています..");
+            Log("本体の接続を待っています..");
             advertiseButton.interactable = false;
             stopButton.interactable = true;
             hostName.text = playerNameInputField.text;
@@ -164,7 +167,7 @@ public class ChatTest : MonoBehaviour
 
         stopButton.onClick.AddListener(() =>
         {
-            ((BleSock.HostPeer)mPeer).StopAdvertising();
+            ((BleSock.RemoconPeer)peerRemocon).StopAdvertising();
 
             Log("アドバタイズを停止しました");
             advertiseButton.interactable = true;
@@ -172,15 +175,20 @@ public class ChatTest : MonoBehaviour
             advertiseButton.GetComponent<Selectable>().Select();
         });
 
-        // Guest
+        //peerRemocon.Send(bytes, bytes.Length, BleSock.Address.All);
 
-        guestObject.SetActive(false);
+        /////////////////////////////////////////////////////////////////////////////////
+
+        // Central
+        // 本体側、リモコンを探す（アドバタイズスキャン）、接続トライ
+
+        centralObject.SetActive(false);
 
         //joinButton.interactable = false;
-        guestButton.onClick.AddListener(() =>
+        centralButton.onClick.AddListener(() =>
         {
             modeSelectObject.SetActive(false);
-            guestObject.SetActive(true);
+            centralObject.SetActive(true);
             chatObject.SetActive(true);
 
             devicesDropdown.interactable = false;
@@ -191,20 +199,21 @@ public class ChatTest : MonoBehaviour
 
             userName.text = playerNameInputField.text;
 
-            var guest = new BleSock.GuestPeer();
+            var sbUnit = new BleSock.BaseUnitPeer();
+            sbUnit.session = session++;
 
-            guest.onBluetoothRequire += () =>
+            sbUnit.onBluetoothRequire += () =>
             {
                 Log("Bluetoothを有効にしてください");
             };
 
-            guest.onReady += () =>
+            sbUnit.onReady += () =>
             {
                 Log("初期化が完了しました");
 
                 try
                 {
-                    guest.StartScan();
+                    sbUnit.StartScan();
                 }
                 catch (Exception e)
                 {
@@ -213,18 +222,18 @@ public class ChatTest : MonoBehaviour
                     return;
                 }
 
-                Log("デバイスを探索しています..");
+                Log("リモコンを探索しています..");
                 devicesDropdown.ClearOptions();
             };
 
-            guest.onFail += () =>
+            sbUnit.onFail += () =>
             {
                 Log("失敗しました");
             };
 
-            guest.onDiscover += (deviceName, deviceId) =>
+            sbUnit.onDiscover += (deviceName, deviceId) =>
             {
-                Log("デバイスを発見: {0} [{1}]", deviceName, deviceId);
+                Log("リモコンを発見: {0} [{1}]", deviceName, deviceId);
                 devicesDropdown.options.Add(new DeviceOptionData(deviceName, deviceId));
 
                 if (!devicesDropdown.interactable)
@@ -237,11 +246,11 @@ public class ChatTest : MonoBehaviour
                 }
             };
 
-            guest.onConnect += () =>
+            sbUnit.onConnect += () =>
             {
                 Log("接続されました");
 
-                foreach (var player in guest.Players)
+                foreach (var player in sbUnit.Players)
                 {
                     Log(player.PlayerName);
                 }
@@ -249,31 +258,31 @@ public class ChatTest : MonoBehaviour
                 sendInputField.interactable = true;
             };
 
-            guest.onDisconnect += () =>
+            sbUnit.onDisconnect += () =>
             {
                 Log("切断されました");
                 sendInputField.interactable = false;
                 disconnectButton.interactable = false;
             };
 
-            guest.onPlayerJoin += (player) =>
+            sbUnit.onPlayerJoin += (player) =>
             {
                 Log("{0} が参加しました", player.PlayerName);
             };
 
-            guest.onPlayerLeave += (player) =>
+            sbUnit.onPlayerLeave += (player) =>
             {
                 Log("{0} が離脱しました", player.PlayerName);
             };
 
-            guest.onReceive += (message, messageSize, sender) =>
+            sbUnit.onReceive += (message, messageSize, sender) =>
             {
                 Log("{0}: {1}", sender.PlayerName, Encoding.UTF8.GetString(message, 0, messageSize));
             };
 
             try
             {
-                guest.Initialize(PROTOCOL_IDENTIFIER, playerNameInputField.text);
+                sbUnit.Initialize(PROTOCOL_IDENTIFIER, playerNameInputField.text);
             }
             catch (Exception e)
             {
@@ -283,7 +292,8 @@ public class ChatTest : MonoBehaviour
             }
 
             Log("初期化しています..");
-            mPeer = guest;
+            peerBaseUnit = sbUnit;
+            AddNewCentralSession(sbUnit);
         });
 
         connectButton.onClick.AddListener(() =>
@@ -291,7 +301,7 @@ public class ChatTest : MonoBehaviour
             var optionData = (DeviceOptionData)devicesDropdown.options[devicesDropdown.value];
             try
             {
-                ((BleSock.GuestPeer)mPeer).Connect(optionData.deviceId);
+                ((BleSock.BaseUnitPeer)peerBaseUnit).Connect(optionData.deviceId);
             }
             catch (Exception e)
             {
@@ -308,9 +318,10 @@ public class ChatTest : MonoBehaviour
 
         disconnectButton.onClick.AddListener(() =>
         {
-            ((BleSock.GuestPeer)mPeer).Disconnect();
+            ((BleSock.BaseUnitPeer)peerBaseUnit).Disconnect();
         });
 
+        /////////////////////////////////////////////////////////////////////////////////
         // Chat
 
         chatObject.SetActive(false);
@@ -318,10 +329,11 @@ public class ChatTest : MonoBehaviour
         sendInputField.interactable = false;
         sendInputField.onEndEdit.AddListener((text) =>
         {
+            BleSock.PeerBase peer = peerBaseUnit != null ? (BleSock.PeerBase)peerBaseUnit : (BleSock.PeerBase)peerRemocon;
             var bytes = Encoding.UTF8.GetBytes(text);
             try
             {
-                mPeer.Send(bytes, bytes.Length, BleSock.Address.All);
+                peer.Send(bytes, bytes.Length, BleSock.Address.Others);
             }
             catch (Exception e)
             {
@@ -336,36 +348,52 @@ public class ChatTest : MonoBehaviour
         backButton.interactable = false;
         backButton.onClick.AddListener(() =>
         {
-            if (mPeer != null)
+            if (peerBaseUnit != null)
             {
-                mPeer.Dispose();
-                mPeer = null;
+                peerBaseUnit.Dispose();
+                peerBaseUnit = null;
+            }
+            if (peerRemocon != null)
+            {
+                peerRemocon.Dispose();
+                peerRemocon = null;
             }
 
             mLogs.Clear();
 
             modeSelectObject.SetActive(true);
-            hostObject.SetActive(false);
-            guestObject.SetActive(false);
+            peripheralObject.SetActive(false);
+            centralObject.SetActive(false);
             chatObject.SetActive(false);
-            hostButton.GetComponent<Selectable>().Select();
+            peripheralButton.GetComponent<Selectable>().Select();
         });
+    }
+
+    private void AddNewCentralSession(BleSock.BaseUnitPeer peer)
+    {
+        int no = session;
+        var p = peer;
     }
 
     private void Update()
     {
-        if (mPeer != null)
+        if (peerRemocon != null)
         {
-            statusText.text = string.Format("BluetoothEnabled: {0}", mPeer.IsBluetoothEnabled.ToString());
+            statusText.text = string.Format("BluetoothEnabled: {0}", peerRemocon.IsBluetoothEnabled.ToString());
         }
     }
 
     private void OnDestroy()
     {
-        if (mPeer != null)
+        if (peerBaseUnit != null)
         {
-            mPeer.Dispose();
-            mPeer = null;
+            peerBaseUnit.Dispose();
+            peerBaseUnit = null;
+        }
+        if (peerRemocon != null)
+        {
+            peerRemocon.Dispose();
+            peerRemocon = null;
         }
     }
 

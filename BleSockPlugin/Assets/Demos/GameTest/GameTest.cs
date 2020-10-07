@@ -111,7 +111,7 @@ public class GameTest : MonoBehaviour
             var optionData = (DeviceOptionData)devicesDropdown.options[devicesDropdown.value];
             try
             {
-                ((BleSock.GuestPeer)mPeer).Connect(optionData.deviceId);
+                ((BleSock.BaseUnitPeer)mPeer).Connect(optionData.deviceId);
             }
             catch (Exception e)
             {
@@ -411,7 +411,7 @@ public class GameTest : MonoBehaviour
 
     private void InitHost()
     {
-        var host = new BleSock.HostPeer();
+        var host = new BleSock.RemoconPeer();
 
         host.onBluetoothRequire += () =>
         {
@@ -461,7 +461,7 @@ public class GameTest : MonoBehaviour
 
     private void InitJoin()
     {
-        var guest = new BleSock.GuestPeer();
+        var guest = new BleSock.BaseUnitPeer();
 
         guest.onBluetoothRequire += () =>
         {

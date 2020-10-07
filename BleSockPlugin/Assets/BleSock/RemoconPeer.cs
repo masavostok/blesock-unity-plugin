@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace BleSock
 {
-    public class HostPeer : PeerBase
+    public class RemoconPeer : PeerBase
     {
         // Properties
 
