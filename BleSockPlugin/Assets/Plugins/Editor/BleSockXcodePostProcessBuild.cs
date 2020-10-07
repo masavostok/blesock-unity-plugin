@@ -22,7 +22,7 @@ public static class BleSockXcodePostProcessBuild
         var project = new PBXProject();
         project.ReadFromFile(projectPath);
 
-        string targetGuid = project.TargetGuidByName(PBXProject.GetUnityTargetName());
+        string targetGuid = project.GetUnityFrameworkTargetGuid();//project.TargetGuidByName(PBXProject.GetUnityTargetName());
         project.AddCapability(targetGuid, PBXCapabilityType.BackgroundModes);
 
         project.SetBuildProperty(targetGuid, "SWIFT_OBJC_INTERFACE_HEADER_NAME", "Unity-Swift.h");

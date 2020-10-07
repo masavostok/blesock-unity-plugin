@@ -9,7 +9,7 @@ public class ChatTest : MonoBehaviour
     public GameObject modeSelectObject;
     public InputField playerNameInputField;
     public Button hostButton;
-    public Button joinButton;
+    public Button guestButton;
 
     public GameObject hostObject;
     public Button advertiseButton;
@@ -28,7 +28,7 @@ public class ChatTest : MonoBehaviour
 
     [SerializeField] private Text hostName;
     [SerializeField] private Text userName;
-
+    [SerializeField] private Text fatalError;
 
     private const string PROTOCOL_IDENTIFIER = "BleChatTest";
 
@@ -62,7 +62,7 @@ public class ChatTest : MonoBehaviour
         {
             bool interactable = !string.IsNullOrEmpty(name);
             hostButton.interactable = interactable;
-            joinButton.interactable = interactable;
+            guestButton.interactable = interactable;
         });
 
         // Host
@@ -77,6 +77,7 @@ public class ChatTest : MonoBehaviour
             if (!BleSock.AndroidUtils.IsPeripheralAvailable)
             {
                 Log("このハードウェアはBluetooth LEの機能が不足しています");
+                fatalError.text = "※このハードウェアはBluetooth LE ペリフェラルをサポートしていないため動作しません。";
                 return;
             }
 #endif
@@ -176,7 +177,7 @@ public class ChatTest : MonoBehaviour
         guestObject.SetActive(false);
 
         //joinButton.interactable = false;
-        joinButton.onClick.AddListener(() =>
+        guestButton.onClick.AddListener(() =>
         {
             modeSelectObject.SetActive(false);
             guestObject.SetActive(true);
@@ -232,6 +233,7 @@ public class ChatTest : MonoBehaviour
                     devicesDropdown.value = 0;
                     devicesDropdown.RefreshShownValue();
                     connectButton.interactable = true;
+                    connectButton.GetComponent<Selectable>().Select();
                 }
             };
 
@@ -371,7 +373,7 @@ public class ChatTest : MonoBehaviour
     {
         mLogs.Add(string.Format(format, args));
 
-        if (mLogs.Count > 12)
+        if (mLogs.Count > 10)
         {
             mLogs.RemoveAt(0);
         }
@@ -383,5 +385,10 @@ public class ChatTest : MonoBehaviour
         }
 
         logsText.text = builder.ToString();
+    }
+
+    public void OnClickExit()
+    {
+        Application.Quit();
     }
 }
